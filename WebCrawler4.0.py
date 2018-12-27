@@ -4,11 +4,8 @@ from pprint import pprint
 import pandas as pd
 import numpy as np
 from pprint import pprint
-import itertools
 import operator
 from time import sleep
-from tabulate import tabulate
-from threading import Event
 
 
 url = 'https://forum.lowyat.net/ReviewsandGuides'
@@ -53,6 +50,7 @@ def iterateThroughPages(_lastindexpost, _postperpage, _url):
                         print(6)
                         extractDataFromRow1(
                             bs_link, 'td', 'row1', 'valign', 'middle')
+                        extractDataFromRow2(bs_link)
                         sleep(0.5)
                         print(7)
                     i += _postperpage
@@ -89,32 +87,21 @@ def extractDataFromRow1(_url, _tag, _classname, _alignment, _position):
         return None
 
 
-def extractDataFromRow2(_url, _tag, _classname, _alignment, _position):
+def extractDataFromRow2(_url):
     try:
-        for container in _url.find_all(_tag, {'class': _classname, _alignment: _position}):
-            # print(container)
-            # get data from topic title in table cell
-            print(0)
-            # pprint(container)
-            replies = container.select_one(
-                'a[href^="javascript:]"').text
-            print(1)
-            print('there are ' + replies + ' replies')
-            print(2)
-            topic_starter = container.next_sibling.text
-            print(3)
-            print('the owner of this topic is ' + topic_starter)
-            for total_view in container.find('a', href=True, style=True):
-                #total_view = container.select_one(style="background-color:").text
-                #total_view = container.find(("td")["style"])
-                #total_view = container.next_sibling.find_next_sibling/next_sibling
-                print(4)
-                print(total_view)
-            if replies and topic_starter is not None:
+        for container in _url.select('table[cellspacing="1"] > tr')[2:32]:
+            replies = container.select_one('td:nth-of-type(4)').text.strip()
+            topic_started = container.select_one(
+                'td:nth-of-type(5)').text.strip()
+            total_views = container.select_one(
+                'td:nth-of-type(6)').text.strip()
+            if replies and topic_started and total_views is not None:
                 d1 = replies
-                d2 = topic_starter
+                d2 = topic_started
+                d3 = total_views
                 l4.append(d2)
                 l3.append(d1)
+                l5.append(d3)
             else:
                 print('no data')
                 None
@@ -123,20 +110,8 @@ def extractDataFromRow2(_url, _tag, _classname, _alignment, _position):
         return None
 
 
-# extractDataFromRow1(getContentFromURL(url), 'td')
-# pprint(l1)
-# def finalOutputPandas(_data):
-# print(extractDataFromRow2(getContentFromURL(
-#   url), 'td', 'row2', 'align', 'center'))
-# pprint(extractDataFromRow1(getContentFromURL(
-#    url), 'td', 'row1', 'valign', 'middle'))
-print(extractDataFromRow2(getContentFromURL(
-    url), 'td', 'row2', 'align', 'center'))
-# print(iterateThroughPages(300, 30, url))
-# test_pd=pd.DataFrame({'Title': l1, 'Description': l2})
-# pprint(test_pd)
-# test_pd.to_csv('out.csv')
-# # print(len(board_array))
-# df = pd.DataFrame(l)
-# df.columns = ['Description', 'Title']
-# pprint(df.head(90))
+print(iterateThroughPages(1770, 30, url))
+test_pd = pd.DataFrame({'Title': l1, 'Description': l2,
+                        'Replies': l3, 'Topic Starter': l4, 'Total Views': l5})
+pprint(test_pd)
+test_pd.to_csv('out.csv')
