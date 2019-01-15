@@ -1,4 +1,4 @@
-from requests import get
+import requests
 import pandas as pd
 
 
@@ -7,9 +7,11 @@ URL2 = 'https://shopee.com.my/api/v2/flash_sale/get_items?offset=0&limit=16&filt
 URL3 = 'https://shopee.com.my/api/v2/recommendation/top_products/meta_lite'
 URL4 = 'https://shopee.com.my/api/v2/recommend_items/get?recommend_type=5&limit=60&offset=0'
 
+SESSION = requests.Session()
+
 
 def get_response(_url):
-    response = get(_url)
+    response = SESSION.get(_url)
     return response
 
 
@@ -77,12 +79,20 @@ def create_pdTP():
 def create_pdDD():
     return pd.DataFrame(
         get_daily_discoveries(get_response(URL4)),
-        columns=['DD_Name', 'DD_Likes', 'DD_Discount', 'DD_Stock']
+        columns=['DD_Name', 'DD_Discount', 'DD_Likes', 'DD_Stock']
     )
 
 
+def create_CSV():
+    ShockingSales = create_pdSS()
+    DailyDiscoveries = create_pdDD()
+    TrendingItems = create_pdTI()
+    TopProduct = create_pdTP()
+    return (ShockingSales.to_csv("ShockingSales.csv"),
+            DailyDiscoveries.to_csv("DailyDiscoveries.csv"),
+            TrendingItems.to_csv("TrendingItems.csv"),
+            TopProduct.to_csv("TopProduct.csv"))
+
+
 if __name__ == '__main__':
-    print(create_pdSS())
-    print(create_pdDD())
-    print(create_pdTI())
-    print(create_pdTP())
+    create_CSV()
