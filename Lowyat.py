@@ -16,7 +16,7 @@ def get_table_rows(base_url, posts_per_page=30):
     while True:
         print(f'current page index is: {start_at // posts_per_page + 1}')
         response = SESSION.get(base_url + f"/+{start_at}")
-        print(response)
+        response.raise_for_status()
         soup = BeautifulSoup(response.text, 'lxml',
                              parse_only=SoupStrainer("table", {"cellspacing": "1"}))
         yield from soup.find_all("tr")
@@ -30,6 +30,7 @@ def parse_row(row):
         if not columns or columns[0]["class"] in (["darkrow1"], ["nopad"]):
             return
     except KeyError:  # first column has no class
+        # print(row)
         return
     try:
         title = row.select_one(
@@ -41,9 +42,11 @@ def parse_row(row):
             'td:nth-of-type(5)').text.strip() or "No Data"
         total_views = row.select_one(
             'td:nth-of-type(6)').text.strip() or "No Data"
+        sleep(0.2)
         print(title)
-        sleep(0.3)
+        print(description)
     except AttributeError:  # something is None
+        # print(row)
         return
     return {"Title": title,
             "Description": description,
@@ -61,4 +64,4 @@ if __name__ == "__main__":
     url = 'https://forum.lowyat.net/ReviewsandGuides'
     max_posts = 1770
     df = pd.DataFrame.from_records(islice(parse_rows(url), max_posts))
-    print(df)
+    df.to_csv("Lowyat.csv")
