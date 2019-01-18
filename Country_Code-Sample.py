@@ -6,7 +6,6 @@ SESSION = requests.Session()
 
 list_a = []
 
-
 class mySession:
 
     def fetch_xml(self, URL):  # Gets the <html> structure from the website #
