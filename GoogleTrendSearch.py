@@ -3,7 +3,7 @@ import re
 import requests
 from bs4 import BeautifulSoup, SoupStrainer
 import pandas as pd
-from time import sleep
+import time
 
 SESSION = requests.Session()
 
@@ -26,27 +26,21 @@ google_session = myGoogleSession()
 
 def google_trends_retriever(URL, country_code):
     xml_soup = google_session.fetch_google_xml(URL, country_code)
+    print(country_code)
     return[(title.text, re.sub("[+,]", "", traffic.text))
            for title, traffic in zip(xml_soup.find_all('title')[1:],
                                      xml_soup.find_all('ht:approx_traffic'))]
 
 
 def create_pdTrend(data):
-    return pd.DataFrame(
+    check_panda = pd.DataFrame(
         google_trends_retriever(GoogleURL, data),
         columns=['Title', 'Score']
     )
-
-
-def create_dict(url):
-    country_code = create_pdCountryCode(parse_row(url))
-    return dict(country_code.Country_Code)
-
-
-def iterate_CountryCode(url):
-    d = create_dict(url)[:-1]
-    return [(the_key)
-            for the_key in d.items()]
+    if len(check_panda) == 0:
+        print('No available data')
+    else:
+        return check_panda
 
 
 """ This is the Country Code Selector Section """
@@ -83,10 +77,9 @@ def create_pdCountryCode(country_code):
 
 def iterate_List(data):
     i = 1
-    while i < len(data):
+    while i <= 239:
         selected_CountryCode = get_data_fromList(i)
         print(create_pdTrend(selected_CountryCode))
-        sleep(0.5)
         i += 1
     else:
         print('Has reach the end of i ' + str(i))
@@ -103,6 +96,8 @@ if __name__ == '__main__':
     GoogleURL = "https://trends.google.com/trends/trendingsearches/daily/rss?geo="
     CountryCodeURL = "https://countrycode.org/"
     """-------------"""
+    start = time.time()
+    print("hello")
 
     """Country Code Section """
     parse_row(CountryCodeURL)
@@ -111,3 +106,21 @@ if __name__ == '__main__':
     """Google Analytics Section """
     iterate_List(country_code_list)
     """-------------------------"""
+    end = time.time()
+    print(end - start)
+
+"""Unused code """
+
+
+# def create_dict(url):
+#     country_code = create_pdCountryCode(parse_row(url))
+#     return dict(country_code.Country_Code)
+
+
+# def iterate_CountryCode(url):
+#     key_return = create_dict(url)[:-1]
+#     return [(the_key)
+#             for the_key in key_return.items()]
+
+
+"""Unused code """
